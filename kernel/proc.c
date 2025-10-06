@@ -700,12 +700,17 @@ dump(void){
   struct proc *p = myproc();
   struct trapframe *tf = p->trapframe;
 
-  printf("s2 = %d, s3 = %d, s4 = %d, s5 = %d, s6 = %d, s7 = %d, s8 = %d, s9 = %d, s10 = %d, s11 = %d\n",
-    (int)(tf->s2 & 0xFFFFFFFF), (int)(tf->s3 & 0xFFFFFFFF), (int)(tf->s4 & 0xFFFFFFFF), 
-    (int)(tf->s5 & 0xFFFFFFFF), (int)(tf->s6 & 0xFFFFFFFF), (int)(tf->s7 & 0xFFFFFFFF), 
-    (int)(tf->s8 & 0xFFFFFFFF), (int)(tf->s9 & 0xFFFFFFFF), (int)(tf->s10 & 0xFFFFFFFF), 
-    (int)(tf->s11 & 0xFFFFFFFF));
-    
+  printf("s2 = %d\n",  (int)(tf->s2 & 0xFFFFFFFF));
+  printf("s3 = %d\n",  (int)(tf->s3 & 0xFFFFFFFF));
+  printf("s4 = %d\n",  (int)(tf->s4 & 0xFFFFFFFF));
+  printf("s5 = %d\n",  (int)(tf->s5 & 0xFFFFFFFF));
+  printf("s6 = %d\n",  (int)(tf->s6 & 0xFFFFFFFF));
+  printf("s7 = %d\n",  (int)(tf->s7 & 0xFFFFFFFF));
+  printf("s8 = %d\n",  (int)(tf->s8 & 0xFFFFFFFF));
+  printf("s9 = %d\n",  (int)(tf->s9 & 0xFFFFFFFF));
+  printf("s10 = %d\n", (int)(tf->s10 & 0xFFFFFFFF));
+  printf("s11 = %d\n", (int)(tf->s11 & 0xFFFFFFFF));
+
 }
 
 
