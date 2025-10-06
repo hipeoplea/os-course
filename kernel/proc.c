@@ -700,14 +700,14 @@ dump(void){
   struct proc *p = myproc();
   struct trapframe *tf = p->trapframe;
 
-  printf("s2: %d, s3: %d, s4: %d, s5: %d, s6: %d, s7: %d, s8: %d, s9: %d, s10: %d, s11: %d\n",
+  printf("s2 = %d, s3 = %d, s4 = %d, s5 = %d, s6 = %d, s7 = %d, s8 = %d, s9 = %d, s10 = %d, s11 = %d\n",
     (int)(tf->s2 & 0xFFFFFFFF), (int)(tf->s3 & 0xFFFFFFFF), (int)(tf->s4 & 0xFFFFFFFF), 
     (int)(tf->s5 & 0xFFFFFFFF), (int)(tf->s6 & 0xFFFFFFFF), (int)(tf->s7 & 0xFFFFFFFF), 
     (int)(tf->s8 & 0xFFFFFFFF), (int)(tf->s9 & 0xFFFFFFFF), (int)(tf->s10 & 0xFFFFFFFF), 
     (int)(tf->s11 & 0xFFFFFFFF));
-
-
+    
 }
+
 
 int
 dump2(int pid, int regnum, uint64 user_dst){
