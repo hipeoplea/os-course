@@ -693,3 +693,72 @@ procdump(void)
     printf("\n");
   }
 }
+
+
+void
+dump(void){
+  struct proc *p = myproc();
+  struct trapframe *tf = p->trapframe;
+
+  printf("s2: %d, s3: %d, s4: %d, s5: %d, s6: %d, s7: %d, s8: %d, s9: %d, s10: %d, s11: %d\n",
+    (int)(tf->s2 & 0xFFFFFFFF), (int)(tf->s3 & 0xFFFFFFFF), (int)(tf->s4 & 0xFFFFFFFF), 
+    (int)(tf->s5 & 0xFFFFFFFF), (int)(tf->s6 & 0xFFFFFFFF), (int)(tf->s7 & 0xFFFFFFFF), 
+    (int)(tf->s8 & 0xFFFFFFFF), (int)(tf->s9 & 0xFFFFFFFF), (int)(tf->s10 & 0xFFFFFFFF), 
+    (int)(tf->s11 & 0xFFFFFFFF));
+
+
+}
+
+int
+dump2(int pid, int regnum, uint64 user_dst){
+  struct proc *cur = myproc();
+  struct proc *p = 0;
+
+  for (struct proc *pp = proc; pp < &proc[NPROC]; pp++) {
+    if (pp->pid == pid) {
+      p = pp;
+      break;
+    }
+  }
+  if (p == 0)
+    return -2;
+  
+
+  int allowed = 0;
+  if (cur == p)
+    allowed = 1;
+  else {
+    for (struct proc *anc = p->parent; anc != 0; anc = anc->parent) {
+      if (anc == cur) {
+        allowed = 1;
+        break;
+      }
+    }
+  }
+  if (!allowed)
+    return -1;
+
+  uint64 val = 0;
+  struct trapframe *tf = p->trapframe; 
+
+
+  switch (regnum) {
+    case 2:  val = (uint32)tf->s2; break;
+    case 3:  val = (uint32)tf->s3; break;
+    case 4:  val = (uint32)tf->s4; break;
+    case 5:  val = (uint32)tf->s5; break;
+    case 6:  val = (uint32)tf->s6; break;
+    case 7:  val = (uint32)tf->s7; break;
+    case 8:  val = (uint32)tf->s8; break;
+    case 9:  val = (uint32)tf->s9; break;
+    case 10: val = (uint32)tf->s10; break;
+    case 11: val = (uint32)tf->s11; break;
+    default: return -3; 
+  }
+
+  if (copyout(cur->pagetable, user_dst, (char *)&val, sizeof(val)) < 0)
+    return -4;
+
+
+  return 0;
+}
