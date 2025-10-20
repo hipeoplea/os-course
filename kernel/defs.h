@@ -202,4 +202,5 @@ void           bd_init(void*,void*);
 void           bd_free(void*);
 void           *bd_malloc(uint64);
 
-
+void           dump(void);
+int dump2(int pid, int regnum, uint64 user_dst); 

@@ -693,3 +693,56 @@ procdump(void)
     printf("\n");
   }
 }
+
+
+void
+dump(void){
+  struct proc *p = myproc();
+  struct trapframe *tf = p->trapframe;
+
+  printf("s2 = %d\n",  (uint32)tf->s2);
+  printf("s3 = %d\n",  (uint32)tf->s3);
+  printf("s4 = %d\n",  (uint32)tf->s4);
+  printf("s5 = %d\n",  (uint32)tf->s5);
+  printf("s6 = %d\n",  (uint32)tf->s6);
+  printf("s7 = %d\n",  (uint32)tf->s7);
+  printf("s8 = %d\n",  (uint32)tf->s8);
+  printf("s9 = %d\n",  (uint32)tf->s9);
+  printf("s10 = %d\n", (uint32)tf->s10);
+  printf("s11 = %d\n", (uint32)tf->s11);
+
+}
+
+
+int
+dump2(int pid, int regnum, uint64 user_dst){
+  struct proc *cur = myproc();
+  struct proc *p = 0;
+
+  for (struct proc *pp = proc; pp < &proc[NPROC]; pp++) {
+    if (pp->pid == pid) {
+      p = pp;
+      break;
+    }
+  }
+  if (!p)
+    return -2;
+  
+
+  struct proc *anc;
+    for (anc = p; anc; anc = anc->parent) {
+        if (anc == cur)
+            break;
+    }
+    if (!anc)
+        return -1;
+
+  if (regnum < 2 || regnum > 11) return -3;
+
+  uint64 *regptr = &p->trapframe->s2 + (regnum - 2);
+  if (copyout(cur->pagetable, user_dst, (char*)regptr, sizeof(uint64)) < 0)
+      return -4;
+
+
+  return 0;
+}
