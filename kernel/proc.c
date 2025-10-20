@@ -700,16 +700,16 @@ dump(void){
   struct proc *p = myproc();
   struct trapframe *tf = p->trapframe;
 
-  printf("s2 = %d\n",  (int)(tf->s2 & 0xFFFFFFFF));
-  printf("s3 = %d\n",  (int)(tf->s3 & 0xFFFFFFFF));
-  printf("s4 = %d\n",  (int)(tf->s4 & 0xFFFFFFFF));
-  printf("s5 = %d\n",  (int)(tf->s5 & 0xFFFFFFFF));
-  printf("s6 = %d\n",  (int)(tf->s6 & 0xFFFFFFFF));
-  printf("s7 = %d\n",  (int)(tf->s7 & 0xFFFFFFFF));
-  printf("s8 = %d\n",  (int)(tf->s8 & 0xFFFFFFFF));
-  printf("s9 = %d\n",  (int)(tf->s9 & 0xFFFFFFFF));
-  printf("s10 = %d\n", (int)(tf->s10 & 0xFFFFFFFF));
-  printf("s11 = %d\n", (int)(tf->s11 & 0xFFFFFFFF));
+  printf("s2 = %d\n",  (uint32)tf->s2);
+  printf("s3 = %d\n",  (uint32)tf->s3);
+  printf("s4 = %d\n",  (uint32)tf->s4);
+  printf("s5 = %d\n",  (uint32)tf->s5);
+  printf("s6 = %d\n",  (uint32)tf->s6);
+  printf("s7 = %d\n",  (uint32)tf->s7);
+  printf("s8 = %d\n",  (uint32)tf->s8);
+  printf("s9 = %d\n",  (uint32)tf->s9);
+  printf("s10 = %d\n", (uint32)tf->s10);
+  printf("s11 = %d\n", (uint32)tf->s11);
 
 }
 
@@ -725,44 +725,23 @@ dump2(int pid, int regnum, uint64 user_dst){
       break;
     }
   }
-  if (p == 0)
+  if (!p)
     return -2;
   
 
-  int allowed = 0;
-  if (cur == p)
-    allowed = 1;
-  else {
-    for (struct proc *anc = p->parent; anc != 0; anc = anc->parent) {
-      if (anc == cur) {
-        allowed = 1;
-        break;
-      }
+  struct proc *anc;
+    for (anc = p; anc; anc = anc->parent) {
+        if (anc == cur)
+            break;
     }
-  }
-  if (!allowed)
-    return -1;
+    if (!anc)
+        return -1;
 
-  uint64 val = 0;
-  struct trapframe *tf = p->trapframe; 
+  if (regnum < 2 || regnum > 11) return -3;
 
-
-  switch (regnum) {
-    case 2:  val = (uint32)tf->s2; break;
-    case 3:  val = (uint32)tf->s3; break;
-    case 4:  val = (uint32)tf->s4; break;
-    case 5:  val = (uint32)tf->s5; break;
-    case 6:  val = (uint32)tf->s6; break;
-    case 7:  val = (uint32)tf->s7; break;
-    case 8:  val = (uint32)tf->s8; break;
-    case 9:  val = (uint32)tf->s9; break;
-    case 10: val = (uint32)tf->s10; break;
-    case 11: val = (uint32)tf->s11; break;
-    default: return -3; 
-  }
-
-  if (copyout(cur->pagetable, user_dst, (char *)&val, sizeof(val)) < 0)
-    return -4;
+  uint64 *regptr = &p->trapframe->s2 + (regnum - 2);
+  if (copyout(cur->pagetable, user_dst, (char*)regptr, sizeof(uint64)) < 0)
+      return -4;
 
 
   return 0;

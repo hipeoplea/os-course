@@ -3,11 +3,11 @@
 #include "user/user.h"
 
 int main(void){
-    int pipes[2];
+    int pipe1[2], pipe2[2];
     char buf[5];
     int pid;
 
-    if (pipe(pipes) < 0) {
+    if (pipe(pipe1) < 0 || pipe(pipe2) < 0) {
         printf("pipe creation failed\n");
         exit(1);
     }
@@ -20,23 +20,26 @@ int main(void){
     }
 
     if (pid > 0){
-        write(pipes[1], "ping", 4);
-        wait(0);
-        close(pipes[1]);
+        close(pipe1[0]); 
+        write(pipe1[1], "ping", 4);
+        close(pipe1[1]);
 
-        read(pipes[0], buf, 4);
+        close(pipe2[1]);
+        read(pipe2[0], buf, 4);
         printf("%d: got %s\n", getpid(), buf);
 
-        close(pipes[0]);
+        close(pipe2[0]);
+        wait(0);
     }
     else {
-        read(pipes[0], buf, 4);
+        close(pipe1[1]);
+        read(pipe1[0], buf, 4);
         printf("%d: got %s\n", getpid(), buf);
 
-        write(pipes[1], "pong", 4);
-        close(pipes[1]);
-
-        close(pipes[0]);
+        close(pipe1[0]);
+        close(pipe2[0]);
+        write(pipe2[1], "pong", 4);
+        close(pipe2[1]);
     }
 
     exit(0);
