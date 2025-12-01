@@ -98,7 +98,7 @@ allocproc(void)
 {
   struct proc* p;
   acquire(&list_lock);
-  
+
   if (proc_inuse >= NPROC) {
     release(&list_lock);
     return 0;
@@ -327,7 +327,7 @@ reparent(struct proc *p)
   for (pp = head.next; pp != &head; pp = pp->next) {
     if(pp->parent == p){
       pp->parent = initproc;
-      wakeup(initproc);
+      wakeup_nolock(initproc);
     }
   }
 }
@@ -364,7 +364,7 @@ exit(int status)
   reparent(p);
 
   // Parent might be sleeping in wait().
-  wakeup(p->parent);
+  wakeup_nolock(p->parent);
   
   p->xstate = status;
   p->state = ZOMBIE;
@@ -551,10 +551,18 @@ sleep(void *chan, struct spinlock *lk)
   }
 }
 
+void
+wakeup(void *chan)
+{
+  acquire(&list_lock);
+  wakeup_nolock(chan);
+  release(&list_lock);
+}
+
 // Wake up all processes sleeping on chan.
 // Must be called without any p->lock.
 void
-wakeup(void *chan)
+wakeup_nolock(void *chan)
 {
   struct proc *p;
 
