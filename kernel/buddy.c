@@ -84,7 +84,7 @@ void bd_print_vector(char *vector, int len) {
 // Print buddy's data structures
 void bd_print() {
   for (int k = 0; k < nsizes; k++) {
-    printf("size %d (blksz %ld nblk %d): free list: ", k, BLK_SIZE(k), NBLK(k));
+    printf("size %d (blksz %d nblk %d): free list: ", k, (int)BLK_SIZE(k), NBLK(k));
     lst_print(&bd_sizes[k].free);
     printf("  alloc:");
     bd_print_vector(bd_sizes[k].alloc, NBLK(k) / 2);
@@ -272,8 +272,8 @@ int bd_initfree(void *bd_left, void *bd_right) {
 // Mark the range [bd_base,p) as allocated
 int bd_mark_data_structures(char *p) {
   int meta = p - (char *)bd_base;
-  printf("bd: %d meta bytes for managing %ld bytes of memory\n", meta,
-         BLK_SIZE(MAXSIZE));
+  printf("bd: %d meta bytes for managing %d bytes of memory\n", meta,
+         (int)BLK_SIZE(MAXSIZE));
   bd_mark(bd_base, p);
   return meta;
 }
@@ -303,8 +303,8 @@ void bd_init(void *base, void *end) {
     nsizes++;  // round up to the next power of 2
   }
 
-  printf("bd: memory sz is %ld bytes; allocate an size array of length %d\n",
-         (char *)end - p, nsizes);
+  printf("bd: memory sz is %d bytes; allocate an size array of length %d\n",
+         (int)((char *)end - p), nsizes);
 
   // allocate bd_sizes array
   bd_sizes = (Sz_info *)p;
@@ -344,7 +344,7 @@ void bd_init(void *base, void *end) {
 
   // check if the amount that is free is what we expect
   if (free != BLK_SIZE(MAXSIZE) - meta - unavailable) {
-    printf("free %d %ld\n", free, BLK_SIZE(MAXSIZE) - meta - unavailable);
+    printf("free %d %d\n", free, (int)(BLK_SIZE(MAXSIZE) - meta - unavailable));
     panic("bd_init: free mem");
   }
 }
