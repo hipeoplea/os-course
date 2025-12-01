@@ -359,7 +359,7 @@ exit(int status)
   p->cwd = 0;
 
   acquire(&list_lock);
-
+  acquire(&wait_lock);
   // Give any children to init.
   reparent(p);
 
@@ -368,6 +368,7 @@ exit(int status)
   
   p->xstate = status;
   p->state = ZOMBIE;
+  release(&wait_lock);
 
   // Jump into the scheduler, never to return.
   sched();
@@ -383,7 +384,6 @@ wait(uint64 addr)
   struct proc *p = myproc();
 
   acquire(&list_lock);
-
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
@@ -661,6 +661,8 @@ procdump(void)
   };
   struct proc *p;
   char *state;
+  
+  acquire(&list_lock);
 
   printf("\n");
   for (p = head.next; p != &head; p = p->next) {
@@ -673,4 +675,6 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+  release(&list_lock);
+
 }
