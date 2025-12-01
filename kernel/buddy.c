@@ -272,8 +272,8 @@ int bd_initfree(void *bd_left, void *bd_right) {
 // Mark the range [bd_base,p) as allocated
 int bd_mark_data_structures(char *p) {
   int meta = p - (char *)bd_base;
-  printf("bd: %d meta bytes for managing %d bytes of memory\n", meta,
-         (int)BLK_SIZE(MAXSIZE));
+  //printf("bd: %d meta bytes for managing %d bytes of memory\n", meta,
+  //       (int)BLK_SIZE(MAXSIZE));
   bd_mark(bd_base, p);
   return meta;
 }
@@ -282,7 +282,7 @@ int bd_mark_data_structures(char *p) {
 int bd_mark_unavailable(void *end, void *left) {
   int unavailable = BLK_SIZE(MAXSIZE) - (end - bd_base);
   if (unavailable > 0) unavailable = ROUNDUP(unavailable, LEAF_SIZE);
-  printf("bd: 0x%x bytes unavailable\n", unavailable);
+  //printf("bd: 0x%x bytes unavailable\n", unavailable);
 
   void *bd_end = bd_base + BLK_SIZE(MAXSIZE) - unavailable;
   bd_mark(bd_end, bd_base + BLK_SIZE(MAXSIZE));
@@ -303,8 +303,8 @@ void bd_init(void *base, void *end) {
     nsizes++;  // round up to the next power of 2
   }
 
-  printf("bd: memory sz is %d bytes; allocate an size array of length %d\n",
-         (int)((char *)end - p), nsizes);
+  //printf("bd: memory sz is %d bytes; allocate an size array of length %d\n",
+  //       (int)((char *)end - p), nsizes);
 
   // allocate bd_sizes array
   bd_sizes = (Sz_info *)p;
