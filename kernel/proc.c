@@ -257,20 +257,33 @@ userinit(void)
 int
 growproc(int n)
 {
-  uint64 sz;
   struct proc *p = myproc();
+  uint64 sz = p->sz;
 
-  sz = p->sz;
   if(n > 0){
-    if((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
+    if(sz + (uint64)n < sz)        
       return -1;
-    }
-  } else if(n < 0){
-    sz = uvmdealloc(p->pagetable, sz, sz + n);
+    if(sz + (uint64)n >= TRAPFRAME) 
+
+    p->sz = sz + (uint64)n;
+    return 0;
   }
-  p->sz = sz;
+
+  if(n < 0){
+    // signed-safe shrink
+    uint64 nn = (uint64)n;
+    if((uint64)sz + nn < 0)
+      return -1;
+
+    uint64 newsz = (uint64)((uint64)sz + nn);
+    sz = uvmdealloc(p->pagetable, sz, newsz);
+    p->sz = sz;
+    return 0;
+  }
+
   return 0;
 }
+
 
 // Create a new process, copying the parent.
 // Sets up child kernel stack to return as if from fork() system call.
@@ -375,6 +388,39 @@ exit(int status)
   panic("zombie exit");
 }
 
+static int
+lazy_ensure_range(struct proc *p, uint64 uva, uint64 len)
+{
+  if(len == 0)
+    return 0;
+
+  uint64 a = PGROUNDDOWN(uva);
+  uint64 last = PGROUNDDOWN(uva + len - 1);
+
+  for(;;){
+    if(a >= p->sz || a >= TRAPFRAME)   
+      return -1;
+
+    pte_t *pte = walk(p->pagetable, a, 0);
+    if(pte == 0 || (*pte & PTE_V) == 0){
+      char *mem = kalloc();
+      if(mem == 0)
+        return -1;
+      memset(mem, 0, PGSIZE);
+      if(mappages(p->pagetable, a, PGSIZE, (uint64)mem, PTE_R|PTE_W|PTE_U) != 0){
+        kfree(mem);
+        return -1;
+      }
+    }
+
+    if(a == last) break;
+    a += PGSIZE;
+  }
+  return 0;
+}
+
+
+
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
@@ -393,17 +439,23 @@ wait(uint64 addr)
 
         havekids = 1;
         if(pp->state == ZOMBIE){
-          // Found one.
-          pid = pp->pid;
-          if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
-                                  sizeof(pp->xstate)) < 0) {
-            release(&list_lock);
-            return -1;
-          }
-          freeproc(pp);
-          release(&list_lock);
-          return pid;
-        }
+  pid = pp->pid;
+  int x = pp->xstate;
+
+  freeproc(pp);
+
+  if(addr != 0){
+    if(lazy_ensure_range(p, addr, sizeof(x)) < 0 ||
+       copyout(p->pagetable, addr, (char *)&x, sizeof(x)) < 0){
+      release(&list_lock);
+      return -1;
+    }
+  }
+
+  release(&list_lock);
+  return pid;
+}
+
       }
     }
 
@@ -623,7 +675,11 @@ either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
 {
   struct proc *p = myproc();
   if(user_dst){
-    return copyout(p->pagetable, dst, src, len);
+  if(dst < p->sz){
+    if(lazy_ensure_range(p, dst, len) < 0)
+      return -1;
+  }
+  return copyout(p->pagetable, dst, src, len);
   } else {
     memmove((char *)dst, src, len);
     return 0;
@@ -638,6 +694,10 @@ either_copyin(void *dst, int user_src, uint64 src, uint64 len)
 {
   struct proc *p = myproc();
   if(user_src){
+    if(src < p->sz){
+      if(lazy_ensure_range(p, src, len) < 0)
+        return -1;
+    }
     return copyin(p->pagetable, dst, src, len);
   } else {
     memmove(dst, (char*)src, len);
