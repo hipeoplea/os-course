@@ -184,7 +184,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
   for(a = va; a < va + npages*PGSIZE; a += PGSIZE){
     pte = walk(pagetable, a, 0);
     if(pte == 0)
-      continue;               =
+      continue;               
     if((*pte & PTE_V) == 0)
       continue;
 
